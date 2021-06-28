@@ -17,65 +17,47 @@ function App() {
   const [zipCodeUpdated, setZipCodeUpdated] = useState(false);
   const [checkedUserLocation, setCheckedUserLocation] = useState(false);
   const [usingUsersLocation, setUsingUsersLocation] = useState('');
-  const [zipCodeRetrieved, setZipCodeRetrieved] = useState(false);
+  const [zipCodeData, setZipCodeData] = useState([]);
+  const [prevZipCode, setPrevZipCode] = useState('');
 
   useEffect(() => {
-    if (!checkedUserLocation) 
-      getUserLocation();
-
-    if (zipCodeUpdated) {
-      getZipCodeData(zipCode).then(() => {
-        if (zipCodeRetrieved) {
-          getAgencyData()
+    if (agencies.length === 0 || zipCodeUpdated || !checkedUserLocation) {
+      if (!checkedUserLocation) 
+        getUserLocation();
+      if (zipCodeUpdated) {
+        getZipCodeData(zipCode);
+        if (zipCodeData.length > 0) {
+          setCenter([zipCodeData[0].latitude, zipCodeData[0].longitude]);
+          setZipCodeUpdated(false);
+          setUsingUsersLocation('');
+          setErrorMsg('');
         }
-      })
+      }
+      console.log(`center: ${center}`);
+      getAgencies(zipCode)
+        .then(res => res.json())
+        .then(res => setAgencies(res.agencies))
+        .catch((error) => {
+          setErrorMsg(`Failed to fetch agencies: ${error}`)
+        });
     }
+  }, [agencies, zipCode, zipCodeUpdated, center, checkedUserLocation, zipCodeData]);
 
-   if(agencies.length === 0)
-     getAgencyData();
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [agencies, zipCodeUpdated, zipCodeRetrieved]);
-  
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  async function getAgencyData() {
-    await getAgencies(zipCode)
+  function getZipCodeData(zipCode) {
+    getZipCode(zipCode)
       .then(res => res.json())
-      .then(res => {
-        if (JSON.stringify(res) === '{}')
-          throw Error(`No Agencies Found with Zip Code`);
-        setAgencies(res.agencies);
-        setZipCodeRetrieved(false);
-      })
+      .then(res => setZipCodeData(res.zip_codes))
       .catch((error) => {
-        setErrorMsg(`Agencies ${error}`)
-      });
-  }
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  async function getZipCodeData(zipCode) {
-    // eslint-disable-next-line no-unused-vars
-    const result = await getZipCode(zipCode)
-      .then(res => res.json())
-      .then(res => {
-        if (JSON.stringify(res) === '{}')
-          throw Error(`No Agencies Found Within the Zip Code`);
-        setCenter([res.zip_codes[0].latitude, res.zip_codes[0].longitude]); 
-        setZipCodeRetrieved(true);     
-        setZipCodeUpdated(false);
-        setUsingUsersLocation('');
-        setErrorMsg('');
-      })
-      .catch((error) => {
-        setErrorMsg(`ZipCodes ${error}`);
-        setZipCodeUpdated(false);
-        setZipCodeRetrieved(false);
+        setErrorMsg(`Failed to fetch zip_codes: ${error}`)
       });
   }
 
   function getUserLocation() {
     if ("geolocation" in navigator) {
+      console.log("Available");
       navigator.geolocation.getCurrentPosition(function(position) {
+        console.log("Latitude is :", position.coords.latitude);
+        console.log("Longitude is :", position.coords.longitude);
         setCenter([position.coords.latitude, position.coords.longitude])
         setUsingUsersLocation("Using Your Device's Location");
       });
