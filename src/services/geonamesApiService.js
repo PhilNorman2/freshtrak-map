@@ -28,6 +28,7 @@ export async function zipCodesbyLocation(lat, lng) {
 
 export async function getZipCode(zipCode) {
   const query = `?postalcode=${zipCode}&country=US&username=freshmapper`;
+  console.log('getZipCode URL: '+CORS_URL+GEONAMES_HOST+LOOKUP_ZIP_CODE_PATH+query);
   //const response = await fetch(CORS_URL+FRESHTRAK_API_HOST+ZIP_CODES_PATH+query, {
   const response = await fetch(CORS_URL+GEONAMES_HOST+LOOKUP_ZIP_CODE_PATH+query, {
     headers: {
