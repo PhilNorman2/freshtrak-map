@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 console.log(`process.env.CORS_URL ${process.env.REACT_APP_CORS_URL}`);
-const GEONAMES_HOST = 'http://api.geonames.org';
+const GEONAMES_HOST = process.env.REACT_GEONAMES_HOST || 'http://api.geonames.org';
 const ZIPCODES_BY_LOC_PATH = '/findNearbyPostalCodesJSON';
 const LOOKUP_ZIP_CODE_PATH = '/postalCodeLookupJSON'
 const CORS_URL = process.env.REACT_APP_CORS_URL || 'https://cors-anywhere.herokuapp.com/';
