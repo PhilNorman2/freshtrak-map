@@ -1,50 +1,79 @@
 
 import './App.css';
 import React, {useState, useEffect } from 'react';
-import { getAgencies, getZipCode } from './services/freshtrakApiService.js';
-import { Map, TileLayer, Marker, Popup } from 'react-leaflet';
-import { ZipForm } from './ZipForm.js'
+import { getAgencies } from './services/freshtrakApiService.js';
+//import { getAgencies, getZipCode } from './services/freshtrakApiService.js';
+import { Map, TileLayer, CircleMarker, Marker, Popup } from 'react-leaflet';
+import { ZipForm } from './ZipForm.js';
+import {zipCodesbyLocation, getZipCode} from './services/geonamesApiService.js';
+
+let center = [40, -83];
+let userZipCode = '';
 
 function App() {
   const [agencies, setAgencies] = useState([]);
   // eslint-disable-next-line no-unused-vars
   const [errorMsg, setErrorMsg] = useState('');
-  const [center, setCenter] = useState([40, -83]);
-  const [zoom, setZoom] = useState(11.5);
-  const [height, setHeight] = useState(window.innerHeight * 0.9);
-  const [width, setWidth] = useState(window.Width * 0.9);
-  const [zipCode, setZipCode] = useState('43215');
+  
+  const [zoom, setZoom] = useState(12);
+  const [height, setHeight] = useState(window.innerHeight * 0.95);
+  const [width, setWidth] = useState(window.Width * 0.95);
+  const [zipCode, setZipCode] = useState('');
   const [zipCodeUpdated, setZipCodeUpdated] = useState(false);
   const [checkedUserLocation, setCheckedUserLocation] = useState(false);
-  const [usingUsersLocation, setUsingUsersLocation] = useState('');
+  const [userLocationMsg, setUserLocationMsg] = useState('');
   const [zipCodeRetrieved, setZipCodeRetrieved] = useState(false);
+  const [userLocationUpdated, setUserLocationUpdated] = useState(false);
+  const [haveUserLocation, setHaveUserLocation] = useState(false);
+  const [filteredDistance, setFilteredDistance] = useState(10);
+  
 
   useEffect(() => {
     if (!checkedUserLocation) 
       getUserLocation();
 
+    if (haveUserLocation)
+      getZipCodesByLocation(center[0], center[1]).then(() => {
+        setHaveUserLocation(false);
+      });
+
+    if(userLocationUpdated) {
+      setZipCode(userZipCode);
+      setUserLocationMsg("Using Your Device's Location");
+      getAgencyData()
+      .then(setUserLocationUpdated(false))
+    }     
+
     if (zipCodeUpdated) {
       getZipCodeData(zipCode).then(() => {
         if (zipCodeRetrieved) {
-          getAgencyData()
+          getAgencyData();
         }
       })
     }
-
-   if(agencies.length === 0)
-     getAgencyData();
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [agencies, zipCodeUpdated, zipCodeRetrieved]);
+  }, [agencies, zipCodeUpdated, zipCodeRetrieved, userLocationUpdated, haveUserLocation, checkedUserLocation]);
   
   // eslint-disable-next-line react-hooks/exhaustive-deps
   async function getAgencyData() {
-    await getAgencies(zipCode)
+    if (zipCode === '')
+      return;
+    let lat = '';
+    let lng = '';
+    if (userLocationUpdated) {
+      lat = center[0];
+      lng = center[1];
+    }
+    await getAgencies(zipCode, lat, lng)
       .then(res => res.json())
       .then(res => {
         if (JSON.stringify(res) === '{}')
           throw Error(`No Agencies Found with Zip Code`);
-        setAgencies(res.agencies);
+        //const initAgencies = res.agencies;
+        const filteredAgencies = res.agencies.filter( (agency) => {
+          return (agency.estimated_distance < filteredDistance && agency.events.length !== 0);
+        });
+        setAgencies(filteredAgencies);
         setZipCodeRetrieved(false);
       })
       .catch((error) => {
@@ -54,16 +83,20 @@ function App() {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   async function getZipCodeData(zipCode) {
+    if (zipCode === '')
+      return;
     // eslint-disable-next-line no-unused-vars
     const result = await getZipCode(zipCode)
       .then(res => res.json())
       .then(res => {
-        if (JSON.stringify(res) === '{}')
-          throw Error(`No Agencies Found Within the Zip Code`);
-        setCenter([res.zip_codes[0].latitude, res.zip_codes[0].longitude]); 
+        //if (JSON.stringify(res) === '{}')
+        if (res.postalcodes.length === 0)
+          throw Error(`Zip Code not found`);
+        //center = [res.zip_codes[0].latitude, res.zip_codes[0].longitude]; 
+        center = [res.postalcodes[0].lat, res.postalcodes[0].lng]; 
         setZipCodeRetrieved(true);     
         setZipCodeUpdated(false);
-        setUsingUsersLocation('');
+        setUserLocationMsg('');
         setErrorMsg('');
       })
       .catch((error) => {
@@ -73,42 +106,54 @@ function App() {
       });
   }
 
-  function getUserLocation() {
+  async function getZipCodesByLocation(lat, lng) {
+    await zipCodesbyLocation(lat, lng)
+    .then(res => res.json())
+    .then(res => {
+      userZipCode = res.postalCodes[0].postalCode;
+      setUserLocationUpdated(true); 
+      setHaveUserLocation(false);
+    })
+    .catch((error) => {
+      setErrorMsg(`ZipCodesByLocation ${error}`);
+    }); 
+  }
+
+  async function getUserLocation() {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(function(position) {
-        setCenter([position.coords.latitude, position.coords.longitude])
-        setUsingUsersLocation("Using Your Device's Location");
-      });
-    }
+        center = [position.coords.latitude, position.coords.longitude];
+        setHaveUserLocation(true);
+    }); 
+  }
     setCheckedUserLocation(true);
   }
 
   return (
-    //agencies.map(agency => ({latitude: agency.events[0].latitude, longitude: agency.events[0].longitude}))
-    
-    <div className="App"> 
-      <p style={{color: "green"}}>{ usingUsersLocation} </p>
-      <p style={{color: "red"}}>{ errorMsg } </p>
-
+    <div className="App">
+      <h4 style={{height: 4}}> FreshTrak Agencies Locator</h4>
+      <p style={{color: "green",height: 5}}>{ userLocationMsg} </p>
       <div className="ZipCode">
         <p/>
-        <ZipForm 
+        <ZipForm style={{height: 2}}
           zipCode={zipCode}
           setZipCode={setZipCode}
+          filteredDistance={filteredDistance}
+          setFilteredDistance={setFilteredDistance}
           zipCodeUpdated={zipCodeUpdated}
           setZipCodeUpdated={setZipCodeUpdated}
           errorMsg={errorMsg}
           setErrorMsg={setErrorMsg}
         />
+        <p style={{color: "red", height: 2}}>{ errorMsg } </p>
       </div>
         <Map
-          //tap={false} //needed for Safari browser
+          tap={false} //needed for Safari browser
           center={center}
           zoom={zoom}
           width={width}
           height={height}
           style={{height: height + 'px'}}
-          //onClick={this.addMarker}
         >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -122,6 +167,14 @@ function App() {
                   agency.events[0].longitude
                 ]}
                 key={agency['id']}>
+                <CircleMarker
+                  center={center}
+                  color="green"
+                  fillColor="red"
+                  radius={8}
+                  fillOpacity={1}
+                  stroke={false}
+                ></CircleMarker>
                 <Popup>
                   <div className="info-box">
                     <div className="content">
@@ -131,6 +184,9 @@ function App() {
                       <h4> Address </h4>
                       <p>{(agency.address)}</p>
                       <p>{(agency.city)}{'\u00A0'}{'\n'}{agency.state}{'\u00A0'}{agency.zip}</p>
+                      <h4>Estimated Distance</h4>
+                      <p>{(agency.estimated_distance)}m</p>
+                      <a href={`https://freshtrak.com/agency/events/${agency.id}`} target="_blank" rel="noreferrer"> Upcoming Resource Events </a>
                     </div>
                   </div>
                 </Popup>

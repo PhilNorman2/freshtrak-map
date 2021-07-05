@@ -1,15 +1,23 @@
 
-//const FRESHTRAK_API_HOST = 'https://pantry-finder-api.freshtrak.com'
+require('dotenv').config();
 
-export async function getAgencies(zipCode) {
-  //const url = `${FRESHTRAK_API_HOST}/api/agencies/?zip_code=${zipCode}`;
-  
-  const url = `http://localhost:8888/api/agencies?zip_code=`
-  
-  const response = await fetch(url+zipCode, {
+const FRESHTRAK_API_HOST = process.env.REACT_APP_FRESHTRAK_API_HOST || "http://localhost:8888";
+const CORS_URL = process.env.REACT_APP_CORS_URL || '';
+const AGENCIES_PATH = "/api/agencies";
+const ZIP_CODES_PATH = '/api/zip_codes';
+
+
+//const FRESHTRAK_ZIPCODES_URL = `http://localhost:8888/api/zip_codes?zip_code=`;
+export async function getAgencies(zipCode, lat, long) {
+  let query = '';
+  if (lat !== '' && long !== '')
+    query = `?zip_code=${zipCode}&lat=${lat}&long=${long}`;
+  else
+    query = `?zip_code=${zipCode}`;
+  const response = await fetch(CORS_URL+FRESHTRAK_API_HOST+AGENCIES_PATH+query, {
     headers: {
         'Content-Type': 'application/json',
-        'accept': '*/*',
+        'Origin': 'http://localhost:3001',
     },
     mode: 'cors'
   })
@@ -24,11 +32,9 @@ export async function getAgencies(zipCode) {
 }
 
 export async function getZipCode(zipCode) {
-    //const url = `${FRESHTRAK_API_HOST}/api/agencies/?zip_code=${zipCode}`;
-    
-    const url = `http://localhost:8888/api/zip_codes?zip_code=`
-    
-    const response = await fetch(url+zipCode, {
+    const query = `?zip_code=${zipCode}`;
+    //const response = await fetch(CORS_URL+FRESHTRAK_API_HOST+ZIP_CODES_PATH+query, {
+    const response = await fetch("http://localhost:8888"+ZIP_CODES_PATH+query, {
       headers: {
           'Content-Type': 'application/json',
           'accept': '*/*',
@@ -37,7 +43,6 @@ export async function getZipCode(zipCode) {
     })
     .then(response => {
     if (response.status >= 200 && response.status <= 299) {
-      console.log('getZipCode: valid status code');
       return response;
     }
     else {
