@@ -75,6 +75,8 @@ function App() {
         });
         setAgencies(filteredAgencies);
         setZipCodeRetrieved(false);
+        if (filteredAgencies.length === 0)
+          throw Error(`No Agencies Found within ${filteredDistance} miles in ${zipCode}`);
       })
       .catch((error) => {
         setErrorMsg(`Agencies ${error}`)
@@ -159,6 +161,14 @@ function App() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           />
+          <CircleMarker
+            center={center}
+            color="green"
+            fillColor="red"
+            radius={8}
+            fillOpacity={1}
+            stroke={false}
+          ></CircleMarker>
           {agencies.map(agency => {
             return (
               <Marker 
@@ -167,14 +177,7 @@ function App() {
                   agency.events[0].longitude
                 ]}
                 key={agency['id']}>
-                <CircleMarker
-                  center={center}
-                  color="green"
-                  fillColor="red"
-                  radius={8}
-                  fillOpacity={1}
-                  stroke={false}
-                ></CircleMarker>
+                
                 <Popup>
                   <div className="info-box">
                     <div className="content">
