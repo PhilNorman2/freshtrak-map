@@ -1,4 +1,39 @@
 
-.map  {
-  height: 1024px;
+.App {
+  margin: 2px;
+  height: 100%;
+  width: 100%;
+  max-height: 82%;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.heading {
+  max-height: 60px;
+  margin-left: 2px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+.header{
+  height: 0;
+  line-height: .5;
+}
+
+.error-msg {
+  height: 20px;
+  margin-left: 2px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  color: red;
+}
+
+.zip-form {
+  margin: 2px;
+  max-height: 39px;
+}
+
+.map-container {
+  margin: 2px;
+  max-height: 1024;
 }

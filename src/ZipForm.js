@@ -14,7 +14,7 @@ export function ZipForm(props) {
 
 
   return (
-    <form style={{height: 5}} onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit}>
       <label>
         Enter Zip Code:
         <input
@@ -23,7 +23,7 @@ export function ZipForm(props) {
           onChange={e => props.setZipCode(e.target.value)}
         />
       </label>
-      {'\u00A0'}
+      <br/>
       <label>
         Filter By Distance:
         <select

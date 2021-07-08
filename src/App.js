@@ -7,17 +7,15 @@ import { Map, TileLayer, CircleMarker, Marker, Popup } from 'react-leaflet';
 import { ZipForm } from './ZipForm.js';
 import {zipCodesbyLocation, getZipCode} from './services/geonamesApiService.js';
 
-let center = [40, -83];
+let center = [39.9612, -82.9988];
 let userZipCode = '';
+let zoom = 12;
+let height = window.innerHeight *.82;
+let width = window.Width
 
 function App() {
   const [agencies, setAgencies] = useState([]);
-  // eslint-disable-next-line no-unused-vars
   const [errorMsg, setErrorMsg] = useState('');
-  
-  const [zoom, setZoom] = useState(12);
-  const [height, setHeight] = useState(window.innerHeight * 0.95);
-  const [width, setWidth] = useState(window.Width * 0.95);
   const [zipCode, setZipCode] = useState('');
   const [zipCodeUpdated, setZipCodeUpdated] = useState(false);
   const [checkedUserLocation, setCheckedUserLocation] = useState(false);
@@ -39,7 +37,7 @@ function App() {
 
     if(userLocationUpdated) {
       setZipCode(userZipCode);
-      setUserLocationMsg("Using Your Device's Location");
+      setUserLocationMsg("Using Your Device Location");
       getAgencyData()
       .then(setUserLocationUpdated(false))
     }     
@@ -54,13 +52,13 @@ function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agencies, zipCodeUpdated, zipCodeRetrieved, userLocationUpdated, haveUserLocation, checkedUserLocation]);
   
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  
   async function getAgencyData() {
     if (zipCode === '')
       return;
     let lat = '';
     let lng = '';
-    if (userLocationUpdated) {
+    if (userLocationUpdated || zipCode === userZipCode) {
       lat = center[0];
       lng = center[1];
     }
@@ -69,26 +67,24 @@ function App() {
       .then(res => {
         if (JSON.stringify(res) === '{}')
           throw Error(`No Agencies Found with Zip Code`);
-        //const initAgencies = res.agencies;
         const filteredAgencies = res.agencies.filter( (agency) => {
           return (agency.estimated_distance < filteredDistance && agency.events.length !== 0);
         });
         setAgencies(filteredAgencies);
         setZipCodeRetrieved(false);
         if (filteredAgencies.length === 0)
-          throw Error(`No Agencies Found within ${filteredDistance} miles in ${zipCode}`);
+          throw Error(`No Agencies Found within ${filteredDistance} miles of ${zipCode}`);
       })
       .catch((error) => {
         setErrorMsg(`Agencies ${error}`)
       });
   }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   async function getZipCodeData(zipCode) {
     if (zipCode === '')
       return;
-    // eslint-disable-next-line no-unused-vars
-    const result = await getZipCode(zipCode)
+    
+    await getZipCode(zipCode)
       .then(res => res.json())
       .then(res => {
         //if (JSON.stringify(res) === '{}')
@@ -126,29 +122,35 @@ function App() {
       navigator.geolocation.getCurrentPosition(function(position) {
         center = [position.coords.latitude, position.coords.longitude];
         setHaveUserLocation(true);
-    }); 
-  }
+      }
+    )}else {
+      setUserLocationMsg("Geolocation not supported by this broswer.");
+    }; 
     setCheckedUserLocation(true);
   }
 
   return (
     <div className="App">
-      <h4 style={{height: 4}}> FreshTrak Agencies Locator</h4>
-      <p style={{color: "green",height: 5}}>{ userLocationMsg} </p>
-      <div className="ZipCode">
-        <p/>
-        <ZipForm style={{height: 2}}
-          zipCode={zipCode}
-          setZipCode={setZipCode}
-          filteredDistance={filteredDistance}
-          setFilteredDistance={setFilteredDistance}
-          zipCodeUpdated={zipCodeUpdated}
-          setZipCodeUpdated={setZipCodeUpdated}
-          errorMsg={errorMsg}
-          setErrorMsg={setErrorMsg}
-        />
-        <p style={{color: "red", height: 2}}>{ errorMsg } </p>
+      <div className="heading">
+        <h4 className="header">FreshTrak Agencies Locator</h4>
+        <h5 style={{color: 'green'}}>{ userLocationMsg }</h5>
       </div>
+      <div className="zip-form">  
+      <ZipForm 
+        zipCode={zipCode}
+        setZipCode={setZipCode}
+        filteredDistance={filteredDistance}
+        setFilteredDistance={setFilteredDistance}
+        zipCodeUpdated={zipCodeUpdated}
+        setZipCodeUpdated={setZipCodeUpdated}
+        errorMsg={errorMsg}
+        setErrorMsg={setErrorMsg}
+      />        
+      </div>
+      <div className="error-msg">
+        {errorMsg}
+      </div>
+      <div className="map-container">
         <Map
           tap={false} //needed for Safari browser
           center={center}
@@ -166,7 +168,7 @@ function App() {
             color="green"
             fillColor="red"
             radius={8}
-            fillOpacity={1}
+            fillOpacity={.6}
             stroke={false}
           ></CircleMarker>
           {agencies.map(agency => {
@@ -199,6 +201,7 @@ function App() {
         }
         </Map>
       </div>
+    </div>
   );
 }
 export default App;
