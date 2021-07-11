@@ -3,7 +3,6 @@
   margin: 2px;
   height: 100%;
   width: 100%;
-  max-height: 82%;
   background-color: white;
   display: flex;
   flex-direction: column;
@@ -35,5 +34,5 @@
 
 .map-container {
   margin: 2px;
-  max-height: 1024;
+  max-height: 80%;
 }
