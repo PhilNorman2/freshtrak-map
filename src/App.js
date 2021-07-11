@@ -10,7 +10,7 @@ import {zipCodesbyLocation, getZipCode} from './services/geonamesApiService.js';
 let center = [39.9612, -82.9988];
 let userZipCode = '';
 let zoom = 12;
-let height = window.innerHeight *.82;
+let height = window.innerHeight *.85;
 let width = window.Width
 
 function App() {
