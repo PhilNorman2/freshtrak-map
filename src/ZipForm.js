@@ -19,6 +19,7 @@ export function ZipForm(props) {
         Enter Zip Code:
         <input
           type="text"
+          font-size="16px"
           value={props.zipCode}
           onChange={e => props.setZipCode(e.target.value)}
         />
@@ -27,6 +28,7 @@ export function ZipForm(props) {
       <label>
         Filter By Distance:
         <select
+         font-size="16px"
          value={props.filteredDistance}
          onChange={e => props.setFilteredDistance(e.target.value)}
          name='filter_by_distance'>
@@ -38,7 +40,7 @@ export function ZipForm(props) {
          </select>
       </label>
       
-      <input type="submit" value="Submit" />
+      <input type="submit" font-size="16px" value="Submit" />
     </form>
   );
 }
