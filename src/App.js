@@ -7,11 +7,12 @@ import { Map, TileLayer, CircleMarker, Marker, Popup } from 'react-leaflet';
 import { ZipForm } from './ZipForm.js';
 import {zipCodesbyLocation, getZipCode} from './services/geonamesApiService.js';
 
-let center = [39.9612, -82.9988];
+let center = [39.9612, -82.9988]; // Central Columbus OH Zip
 let userZipCode = '';
 let zoom = 12;
 let height = window.innerHeight *.85;
-let width = window.Width
+let width = window.Width;
+let userLocation = [];
 
 function App() {
   const [agencies, setAgencies] = useState([]);
@@ -49,6 +50,12 @@ function App() {
         }
       })
     }
+/*
+    if (zipCodeUpdated && zipCode === userZipCode) {
+          getAgencyData();
+    }
+*/
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agencies, zipCodeUpdated, zipCodeRetrieved, userLocationUpdated, haveUserLocation, checkedUserLocation]);
   
@@ -59,8 +66,8 @@ function App() {
     let lat = '';
     let lng = '';
     if (userLocationUpdated || zipCode === userZipCode) {
-      lat = center[0];
-      lng = center[1];
+      lat = userLocation[0];
+      lng = userLocation[1];
     }
     await getAgencies(zipCode, lat, lng)
       .then(res => res.json())
@@ -72,8 +79,11 @@ function App() {
         });
         setAgencies(filteredAgencies);
         setZipCodeRetrieved(false);
-        if (filteredAgencies.length === 0)
-          throw Error(`No Agencies Found within ${filteredDistance} miles of ${zipCode}`);
+        if (filteredAgencies.length === 0) {
+          let location = '';
+          zipCode === userZipCode? location = "user's location" : location = `${zipCode}`;
+          throw Error(`No Agencies Found within ${filteredDistance} miles of ${location}`);
+        }
       })
       .catch((error) => {
         setErrorMsg(`Agencies ${error}`)
@@ -91,7 +101,10 @@ function App() {
         if (res.postalcodes.length === 0)
           throw Error(`Zip Code not found`);
         //center = [res.zip_codes[0].latitude, res.zip_codes[0].longitude]; 
-        center = [res.postalcodes[0].lat, res.postalcodes[0].lng]; 
+        if (zipCode === userZipCode) 
+          center = userLocation;
+        else
+          center = [res.postalcodes[0].lat, res.postalcodes[0].lng]; 
         setZipCodeRetrieved(true);     
         setZipCodeUpdated(false);
         setUserLocationMsg('');
@@ -120,7 +133,7 @@ function App() {
   async function getUserLocation() {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(function(position) {
-        center = [position.coords.latitude, position.coords.longitude];
+        center = userLocation = [position.coords.latitude, position.coords.longitude];
         setHaveUserLocation(true);
       }
     )}else {
