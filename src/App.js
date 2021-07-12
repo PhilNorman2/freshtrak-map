@@ -9,7 +9,7 @@ import {zipCodesbyLocation, getZipCode} from './services/geonamesApiService.js';
 
 let center = [39.9612, -82.9988]; // Central Columbus OH Zip
 let userZipCode = '';
-let zoom = 12;
+let zoom = 11.5;
 let height = window.innerHeight *.85;
 let width = window.Width;
 let userLocation = [];
@@ -50,15 +50,9 @@ function App() {
         }
       })
     }
-/*
-    if (zipCodeUpdated && zipCode === userZipCode) {
-          getAgencyData();
-    }
-*/
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agencies, zipCodeUpdated, zipCodeRetrieved, userLocationUpdated, haveUserLocation, checkedUserLocation]);
-  
   
   async function getAgencyData() {
     if (zipCode === '')
@@ -101,13 +95,16 @@ function App() {
         if (res.postalcodes.length === 0)
           throw Error(`Zip Code not found`);
         //center = [res.zip_codes[0].latitude, res.zip_codes[0].longitude]; 
-        if (zipCode === userZipCode) 
+        if (zipCode === userZipCode) {
           center = userLocation;
-        else
-          center = [res.postalcodes[0].lat, res.postalcodes[0].lng]; 
+          setUserLocationMsg("Using Your Device Location");
+        }
+        else {  
+          center = [res.postalcodes[0].lat, res.postalcodes[0].lng];
+          setUserLocationMsg('');
+        }  
         setZipCodeRetrieved(true);     
         setZipCodeUpdated(false);
-        setUserLocationMsg('');
         setErrorMsg('');
       })
       .catch((error) => {
