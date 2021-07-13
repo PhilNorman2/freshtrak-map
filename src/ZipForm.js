@@ -23,9 +23,9 @@ export function ZipForm(props) {
           onChange={e => props.setZipCode(e.target.value)}
         />
       </label>
-      {'\u00A0'}
+      <br/>
       <label>
-        Filter Distance:
+        Filter By Distance:
         <select
          value={props.filteredDistance}
          onChange={e => props.setFilteredDistance(e.target.value)}
@@ -39,7 +39,7 @@ export function ZipForm(props) {
       </label>
       <br/>
       <label>
-        Filter Service Category:
+        Filter By Service Category:
         <select
          value={props.filteredServiceCategory}
          onChange={e => props.setFilteredServiceCategory(e.target.value)}

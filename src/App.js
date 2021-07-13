@@ -9,7 +9,7 @@ import {zipCodesbyLocation, getZipCode} from './services/geonamesApiService.js';
 
 let center = [39.9612, -82.9988]; // Central Columbus OH Zip
 let userZipCode = '';
-let height = window.innerHeight *.80;
+let height = window.innerHeight *.76;
 let width = window.Width;
 let userLocation = [];
 
