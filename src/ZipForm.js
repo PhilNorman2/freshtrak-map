@@ -37,7 +37,20 @@ export function ZipForm(props) {
          <option value='50'> 50 mi</option>
          </select>
       </label>
-      
+      <br/>
+      <label>
+        Filter By Service Category:
+        <select
+         value={props.filteredServiceCategory}
+         onChange={e => props.setFilteredServiceCategory(e.target.value)}
+         name='filter_by_service_category'>
+         <option value='All'> All </option>
+         <option value='Choice Pantry'> Choice Pantry </option>
+         <option value='Prepack Pantry'> Prepack Pantry </option>
+         <option value='Produce'> Produce </option>
+         <option value='Meal'> Meal </option>
+         </select>
+      </label>    
       <input type="submit" value="Submit" />
     </form>
   );

@@ -9,12 +9,12 @@ import {zipCodesbyLocation, getZipCode} from './services/geonamesApiService.js';
 
 let center = [39.9612, -82.9988]; // Central Columbus OH Zip
 let userZipCode = '';
-let zoom = 11.5;
-let height = window.innerHeight *.85;
+let height = window.innerHeight *.80;
 let width = window.Width;
 let userLocation = [];
 
 function App() {
+  const [zoom, setZoom] = useState(11);
   const [agencies, setAgencies] = useState([]);
   const [errorMsg, setErrorMsg] = useState('');
   const [zipCode, setZipCode] = useState('');
@@ -24,7 +24,8 @@ function App() {
   const [zipCodeRetrieved, setZipCodeRetrieved] = useState(false);
   const [userLocationUpdated, setUserLocationUpdated] = useState(false);
   const [haveUserLocation, setHaveUserLocation] = useState(false);
-  const [filteredDistance, setFilteredDistance] = useState(10);
+  const [filteredDistance, setFilteredDistance] = useState('10');
+  const [filteredServiceCategory, setFilteredServiceCategory] = useState('All');
   
 
   useEffect(() => {
@@ -69,19 +70,53 @@ function App() {
         if (JSON.stringify(res) === '{}')
           throw Error(`No Agencies Found with Zip Code`);
         const filteredAgencies = res.agencies.filter( (agency) => {
-          return (agency.estimated_distance < filteredDistance && agency.events.length !== 0);
+          return (agency.estimated_distance < filteredDistance && agency.events.length !== 0 && containsEventDates(agency) 
+                  && containsServiceCategory(agency));
         });
         setAgencies(filteredAgencies);
+        setZoomForDistance();
         setZipCodeRetrieved(false);
         if (filteredAgencies.length === 0) {
           let location = '';
           zipCode === userZipCode? location = "user's location" : location = `${zipCode}`;
-          throw Error(`No Agencies Found within ${filteredDistance} miles of ${location}`);
+          throw Error(`No Agencies Found within ${filteredDistance} miles of ${location} with Service Category of '${filteredServiceCategory}'`);
         }
       })
       .catch((error) => {
-        setErrorMsg(`Agencies ${error}`)
+        setErrorMsg(`${error}`.substr(7));
       });
+  }
+
+  function containsEventDates(agency) { 
+    for (let i in agency.events) {
+      if (agency.events[i].event_dates.length > 0) 
+        return true;
+    }
+    return false;
+  }
+
+  function containsServiceCategory(agency) {
+    if(filteredServiceCategory === 'All')
+      return true; 
+
+    for (let i in agency.events) {
+      if (agency.events[i].service_category.service_category_name === filteredServiceCategory) 
+        return true;
+    }
+    return false;
+  }
+
+  function setZoomForDistance() {
+    switch (filteredDistance) {
+      case '25':
+        setZoom(10)
+        break;
+      case '50':
+        setZoom(9);
+        break;
+      default: //for cases '3','5','10'
+        setZoom(11);
+    }
   }
 
   async function getZipCodeData(zipCode) {
@@ -151,6 +186,8 @@ function App() {
         setZipCode={setZipCode}
         filteredDistance={filteredDistance}
         setFilteredDistance={setFilteredDistance}
+        filteredServiceCategory={filteredServiceCategory}
+        setFilteredServiceCategory={setFilteredServiceCategory}
         zipCodeUpdated={zipCodeUpdated}
         setZipCodeUpdated={setZipCodeUpdated}
         errorMsg={errorMsg}
