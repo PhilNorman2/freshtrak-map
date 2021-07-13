@@ -23,7 +23,7 @@ export function ZipForm(props) {
           onChange={e => props.setZipCode(e.target.value)}
         />
       </label>
-      <br/>
+      {'\u00A0'}{'\u00A0'}
       <label>
         Filter By Distance:
         <select
